@@ -2,50 +2,68 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 
 const app = express()
+
 app.use(express.json())
+
+// rota para validar a API
 app.get('/api', (req, res) => {
-  res.send('Bem vindo à API JWT!')
+  res.send('API Funcionando!!')
 })
 
+// rota simulando o login do usuário
 app.post('/api/login', (req, res) => {
   const {usuario} = req.body
-  jwt.sign({usuario, perfil: 'administrador', setor: 'contabilidade'}, 'senhaSuperSecreta', (err, token) => {
-    res.json(token)
+  const payload = {
+    usuario,
+    perfil: 'Administrador',
+    setor: 'TIC'
+  }
+  jwt.sign(payload, 'senhaSuperSecretaESegura', (err, token)=>{
+    if(err){
+      res.sendStatus(400)
+    }
+    res.json({token})
   })
 })
 
-app.get('/api/decode', (req, res)=>{
+// rota para mostrar como funciona o payload
+app.get('/api/decode', (req, res) => {
   const token = req.headers.authorization
-  const payload = jwt.verify(token, 'senhaSuperSecreta')
+  const payload = jwt.verify(token, 'senhaSuperSecretaESegura')
   res.json({
-    message: 'usuário validado',
+    message: 'Usuário validado',
     payload
   })
 })
 
-app.get('/api/users',(req, res, next)=>{
+// app.method(rota, validacaoAcesso, controller)
+app.get('/api/users', (req, res, next) => {
   const token = req.headers.authorization
-  jwt.verify(token, 'senhaSuperSecreta', (err, data)=>{
-    if(err) {
+  jwt.verify(token, 'senhaSuperSecretaESegura', (err, data) => {
+    if (err) {
       res.sendStatus(401)
     }
     next()
   })
-},(req, res)=>{
+}, (req, res) => {
   const users = [
     {
-      name: 'Fulano'
+      name: 'Fulano',
+      idade: 20
     },
     {
-      name: 'Cicrano'
+      name: 'Cicrano',
+      idade: 30
     },
     {
-      name: 'Beltrano'
+      name: 'Beltrano',
+      idade: 40
     }
   ]
-  res.send(users)
+  res.json(users)
 })
 
-app.listen(5000, function () {
+// iniciando o servidor na porta 5000
+app.listen(5000, () => {
   console.log('Api funcionando na porta 5000')
 })
